@@ -57,6 +57,7 @@ import (
 	usersv1 "github.com/openshift/api/user/v1"
 	appsv1Client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	oauthClient "github.com/openshift/client-go/oauth/clientset/versioned/typed/oauth/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -156,13 +157,14 @@ func NewReconciler(configManager config.ConfigReadWriter, installation *integrea
 }
 
 type Reconciler struct {
-	ConfigManager config.ConfigReadWriter
-	Config        *config.ThreeScale
-	mpm           marketplace.MarketplaceInterface
-	installation  *integreatlyv1alpha1.RHMI
-	tsClient      ThreeScaleInterface
-	appsv1Client  appsv1Client.AppsV1Interface
-	oauthv1Client oauthClient.OauthV1Interface
+	ConfigManager        config.ConfigReadWriter
+	Config               *config.ThreeScale
+	mpm                  marketplace.MarketplaceInterface
+	installation         *integreatlyv1alpha1.RHMI
+	tsClient             ThreeScaleInterface
+	appsv1Client         appsv1Client.AppsV1Interface
+	oauthv1Client        oauthClient.OauthV1Interface
+	apiManagerDeployment k8sappsv1.Deployment
 	*resources.Reconciler
 	extraParams map[string]string
 	recorder    record.EventRecorder
@@ -443,6 +445,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, installation *integreatlyv1a
 	r.log.Info("ensureDeploymentConfigsReadyForEnvoy-SidecarContainer")
 	if err != nil {
 		events.HandleError(r.recorder, installation, phase, "Failed to ensure deployment configs for envoy-sidecar were ready", err)
+		return phase, err
+	}
+
+	// Ensure deployment configs are ready before returning phase complete
+	phase, err = r.reconcileRatelimitPortAnnotation(ctx, serverClient)
+	r.log.Infof("reconcileRatelimitPortAnnotation", l.Fields{"phase": phase})
+	if err != nil || phase != integreatlyv1alpha1.PhaseCompleted {
+		events.HandleError(r.recorder, installation, phase, "Failed to reconcile ratelimit service port annotation", err)
 		return phase, err
 	}
 
@@ -3116,4 +3126,26 @@ func (r *Reconciler) addResourceThreshold(ctx context.Context, client k8sclient.
 	}
 
 	return nil
+}
+
+func (r *Reconciler) reconcileRatelimitPortAnnotation(ctx context.Context, client k8sclient.Client) (integreatlyv1alpha1.StatusPhase, error) {
+	apim := &k8sappsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "threescale-operator-controller-manager-v2",
+			Namespace: r.Config.GetNamespace(),
+		},
+	}
+
+	if _, err := controllerutil.CreateOrUpdate(ctx, client, apim, func() error {
+		annotations := apim.ObjectMeta.GetAnnotations()
+		if annotations == nil {
+			annotations = map[string]string{}
+		}
+		annotations["apps.3scale.net/disable-apicast-service-reconciler"] = "true"
+
+		return nil
+	}); err != nil {
+		return integreatlyv1alpha1.PhaseFailed, err
+	}
+	return integreatlyv1alpha1.PhaseCompleted, nil
 }

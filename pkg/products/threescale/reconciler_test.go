@@ -10,13 +10,13 @@ import (
 	"github.com/integr8ly/integreatly-operator/pkg/resources/quota"
 
 	moqclient "github.com/integr8ly/integreatly-operator/pkg/client"
-	l "github.com/integr8ly/integreatly-operator/pkg/resources/logger"
-	k8sTypes "k8s.io/apimachinery/pkg/types"
-
 	"github.com/integr8ly/integreatly-operator/pkg/resources/constants"
+	l "github.com/integr8ly/integreatly-operator/pkg/resources/logger"
 	openshiftv1 "github.com/openshift/api/apps/v1"
 	configv1 "github.com/openshift/api/config/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
+	k8sTypes "k8s.io/apimachinery/pkg/types"
 
 	crov1 "github.com/integr8ly/cloud-resource-operator/apis/integreatly/v1alpha1"
 	"github.com/integr8ly/cloud-resource-operator/apis/integreatly/v1alpha1/types"
@@ -84,18 +84,19 @@ func setupRecorder() record.EventRecorder {
 }
 
 type ThreeScaleTestScenario struct {
-	Name                 string
-	Installation         *integreatlyv1alpha1.RHMI
-	FakeSigsClient       k8sclient.Client
-	FakeAppsV1Client     appsv1Client.AppsV1Interface
-	FakeOauthClient      oauthClient.OauthV1Interface
-	FakeThreeScaleClient *ThreeScaleInterfaceMock
-	ExpectedStatus       integreatlyv1alpha1.StatusPhase
-	Assert               AssertFunc
-	MPM                  marketplace.MarketplaceInterface
-	Product              *integreatlyv1alpha1.RHMIProductStatus
-	Recorder             record.EventRecorder
-	Uninstall            bool
+	Name                     string
+	Installation             *integreatlyv1alpha1.RHMI
+	FakeSigsClient           k8sclient.Client
+	FakeAppsV1Client         appsv1Client.AppsV1Interface
+	FakeOauthClient          oauthClient.OauthV1Interface
+	FakeThreeScaleClient     *ThreeScaleInterfaceMock
+	FakeAPIManagerDeployment *k8sappsv1.Deployment
+	ExpectedStatus           integreatlyv1alpha1.StatusPhase
+	Assert                   AssertFunc
+	MPM                      marketplace.MarketplaceInterface
+	Product                  *integreatlyv1alpha1.RHMIProductStatus
+	Recorder                 record.EventRecorder
+	Uninstall                bool
 }
 
 func getTestInstallation() *integreatlyv1alpha1.RHMI {
@@ -149,7 +150,13 @@ func TestThreeScale(t *testing.T) {
 			FakeAppsV1Client:     getAppsV1Client(successfulTestAppsV1Objects),
 			FakeOauthClient:      fakeoauthClient.NewSimpleClientset([]runtime.Object{}...).OauthV1(),
 			FakeThreeScaleClient: getThreeScaleClient(),
-			Assert:               assertInstallationSuccessfull,
+			FakeAPIManagerDeployment: &k8sappsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "threescale-operator-controller-manager-v2",
+					Namespace: "3scale",
+				},
+			},
+			Assert: assertInstallationSuccessfull,
 			Installation: &integreatlyv1alpha1.RHMI{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:       "test-installation",
