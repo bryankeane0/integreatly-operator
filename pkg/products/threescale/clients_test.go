@@ -18,7 +18,6 @@ import (
 
 	coreosv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
 
-	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/testing"
@@ -60,7 +59,6 @@ func getSigClient(preReqObjects []runtime.Object, scheme *runtime.Scheme) *clien
 				obj.Data = getMockAlertManagerSecret()
 				return nil
 			}
-		case *k8sappsv1.Deployment:
 		}
 		return sigsFakeClient.GetSigsClient().Get(ctx, key, obj)
 	}
