@@ -153,7 +153,7 @@ func TestThreeScale(t *testing.T) {
 			FakeAPIManagerDeployment: &k8sappsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "threescale-operator-controller-manager-v2",
-					Namespace: "3scale",
+					Namespace: "redhat-rhoam-3scale-operator",
 				},
 			},
 			Assert: assertInstallationSuccessfull,
