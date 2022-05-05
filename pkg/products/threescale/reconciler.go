@@ -3136,7 +3136,6 @@ func (r *Reconciler) reconcileRatelimitPortAnnotation(ctx context.Context, clien
 			Namespace: threescaleOperatorNamespace,
 		},
 	}
-
 	if _, err := controllerutil.CreateOrUpdate(ctx, client, apim, func() error {
 		annotations := apim.ObjectMeta.GetAnnotations()
 		if annotations == nil {
