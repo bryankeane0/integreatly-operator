@@ -601,8 +601,9 @@ func (r *Reconciler) reconcileComponents(ctx context.Context, serverClient k8scl
 	resourceRequirements := r.installation.Spec.Type != string(integreatlyv1alpha1.InstallationTypeWorkshop)
 	apim := &threescalev1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      apiManagerName,
-			Namespace: r.Config.GetNamespace(),
+			Name:        apiManagerName,
+			Namespace:   r.Config.GetNamespace(),
+			Annotations: map[string]string{"apps.3scale.net/disable-apicast-service-reconciler": "true"},
 		},
 		Spec: threescalev1.APIManagerSpec{
 			HighAvailability:    &threescalev1.HighAvailabilitySpec{},
@@ -3130,10 +3131,10 @@ func (r *Reconciler) addResourceThreshold(ctx context.Context, client k8sclient.
 }
 
 func (r *Reconciler) reconcileRatelimitPortAnnotation(ctx context.Context, client k8sclient.Client) (integreatlyv1alpha1.StatusPhase, error) {
-	apim := &k8sappsv1.Deployment{
+	apim := &threescalev1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      threescaleControllerManager,
-			Namespace: threescaleOperatorNamespace,
+			Name:      apiManagerName,
+			Namespace: r.Config.GetNamespace(),
 		},
 	}
 	if _, err := controllerutil.CreateOrUpdate(ctx, client, apim, func() error {
