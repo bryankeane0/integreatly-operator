@@ -57,7 +57,6 @@ import (
 	usersv1 "github.com/openshift/api/user/v1"
 	appsv1Client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	oauthClient "github.com/openshift/client-go/oauth/clientset/versioned/typed/oauth/v1"
-	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -156,14 +155,13 @@ func NewReconciler(configManager config.ConfigReadWriter, installation *integrea
 }
 
 type Reconciler struct {
-	ConfigManager        config.ConfigReadWriter
-	Config               *config.ThreeScale
-	mpm                  marketplace.MarketplaceInterface
-	installation         *integreatlyv1alpha1.RHMI
-	tsClient             ThreeScaleInterface
-	appsv1Client         appsv1Client.AppsV1Interface
-	oauthv1Client        oauthClient.OauthV1Interface
-	apiManagerDeployment k8sappsv1.Deployment
+	ConfigManager config.ConfigReadWriter
+	Config        *config.ThreeScale
+	mpm           marketplace.MarketplaceInterface
+	installation  *integreatlyv1alpha1.RHMI
+	tsClient      ThreeScaleInterface
+	appsv1Client  appsv1Client.AppsV1Interface
+	oauthv1Client oauthClient.OauthV1Interface
 	*resources.Reconciler
 	extraParams map[string]string
 	recorder    record.EventRecorder
@@ -599,9 +597,8 @@ func (r *Reconciler) reconcileComponents(ctx context.Context, serverClient k8scl
 	resourceRequirements := r.installation.Spec.Type != string(integreatlyv1alpha1.InstallationTypeWorkshop)
 	apim := &threescalev1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        apiManagerName,
-			Namespace:   r.Config.GetNamespace(),
-			Annotations: map[string]string{"apps.3scale.net/disable-apicast-service-reconciler": "true"},
+			Name:      apiManagerName,
+			Namespace: r.Config.GetNamespace(),
 		},
 		Spec: threescalev1.APIManagerSpec{
 			HighAvailability:    &threescalev1.HighAvailabilitySpec{},
@@ -3135,6 +3132,7 @@ func (r *Reconciler) reconcileRatelimitPortAnnotation(ctx context.Context, clien
 			Namespace: r.Config.GetNamespace(),
 		},
 	}
+
 	if _, err := controllerutil.CreateOrUpdate(ctx, client, apim, func() error {
 		annotations := apim.ObjectMeta.GetAnnotations()
 		if annotations == nil {
