@@ -286,6 +286,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, installation *integreatlyv1a
 		return phase, err
 	}
 
+	phase, err = r.reconcileRatelimitPortAnnotation(ctx, serverClient)
+	r.log.Infof("reconcileRatelimitPortAnnotation", l.Fields{"phase": phase})
+	if err != nil || phase != integreatlyv1alpha1.PhaseCompleted {
+		events.HandleError(r.recorder, installation, phase, "Failed to reconcile ratelimit service port annotation", err)
+		return phase, err
+	}
+
 	if integreatlyv1alpha1.IsRHOAMMultitenant(integreatlyv1alpha1.InstallationType(installation.Spec.Type)) {
 		phase, err = r.reconcile3scaleMultiTenancy(ctx, serverClient)
 		if err != nil {
@@ -420,13 +427,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, installation *integreatlyv1a
 	r.log.Infof("reconcileDeploymentConfigs", l.Fields{"phase": phase})
 	if err != nil || phase != integreatlyv1alpha1.PhaseCompleted {
 		events.HandleError(r.recorder, installation, phase, "Failed to reconcile deployment configs", err)
-		return phase, err
-	}
-
-	phase, err = r.reconcileRatelimitPortAnnotation(ctx, serverClient)
-	r.log.Infof("reconcileRatelimitPortAnnotation", l.Fields{"phase": phase})
-	if err != nil || phase != integreatlyv1alpha1.PhaseCompleted {
-		events.HandleError(r.recorder, installation, phase, "Failed to reconcile ratelimit service port annotation", err)
 		return phase, err
 	}
 
