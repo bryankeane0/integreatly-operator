@@ -423,6 +423,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, installation *integreatlyv1a
 		return phase, err
 	}
 
+	phase, err = r.reconcileRatelimitPortAnnotation(ctx, serverClient)
+	r.log.Infof("reconcileRatelimitPortAnnotation", l.Fields{"phase": phase})
+	if err != nil || phase != integreatlyv1alpha1.PhaseCompleted {
+		events.HandleError(r.recorder, installation, phase, "Failed to reconcile ratelimit service port annotation", err)
+		return phase, err
+	}
+
 	phase, err = r.changesDeploymentConfigsEnvVar(ctx, serverClient)
 	r.log.Infof("changesDeploymentConfigsEnvVar", l.Fields{"phase": phase})
 	if err != nil || phase != integreatlyv1alpha1.PhaseCompleted {
@@ -3139,8 +3146,6 @@ func (r *Reconciler) reconcileRatelimitPortAnnotation(ctx context.Context, clien
 			annotations = map[string]string{}
 		}
 		annotations["apps.3scale.net/disable-apicast-service-reconciler"] = "true"
-		apim.ObjectMeta.SetAnnotations(annotations)
-
 		return nil
 	}); err != nil {
 		return integreatlyv1alpha1.PhaseFailed, err
