@@ -172,7 +172,7 @@ metadata:
     capabilities: Deep Insights
     categories: Integration & Delivery
     certified: "false"
-    containerImage: registry.redhat.io/3scale-amp2/3scale-rhel7-operator@sha256:06878a946d0011bcf45c35d6454e64054a7d7b54444edfc2af3769b95eb0c218
+    containerImage: quay.io/bkeane0/3scale-operator:0.4.0
     createdAt: "2019-05-30T22:40:00Z"
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
@@ -310,6 +310,14 @@ spec:
       clusterPermissions:
       - rules:
         - apiGroups:
+            - config.openshift.io
+          resources:
+            - clusterversions
+          verbs:
+            - get
+            - list
+            - watch
+        - apiGroups:
           - console.openshift.io
           resources:
           - consolelinks
@@ -372,7 +380,7 @@ spec:
                   value: registry.redhat.io/rhscl/postgresql-10-rhel7@sha256:c9fe30ba965144c918f67ab61feda55eb80e5e47c32fdbbe36831b78d56890a8
                 - name: RELATED_IMAGE_OC_CLI
                   value: registry.redhat.io/openshift4/ose-cli@sha256:028ba12cbbf038dd57185f9ede402f15cef503c361efed8e94210b2b13a53933
-                image: registry.redhat.io/3scale-amp2/3scale-rhel7-operator@sha256:06878a946d0011bcf45c35d6454e64054a7d7b54444edfc2af3769b95eb0c218
+                image: quay.io/bkeane0/3scale-operator:0.4.0
                 name: manager
                 ports:
                 - containerPort: 8080
