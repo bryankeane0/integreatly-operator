@@ -51,10 +51,17 @@ var (
 )
 
 type Quota struct {
+<<<<<<< HEAD
 	name               string
 	productConfigs     map[v1alpha1.ProductName]QuotaProductConfig
 	isUpdated          bool
 	rateLimitConfig    marin3rconfig.RateLimitConfig
+=======
+	name            string
+	productConfigs  map[v1alpha1.ProductName]QuotaProductConfig
+	isUpdated       bool
+	rateLimitConfig marin3rconfig.RateLimitConfig
+>>>>>>> 53c31d75f (MGDAPI-3873 wip)
 	autoscalingEnabled bool
 }
 
@@ -70,9 +77,9 @@ type ProductConfig interface {
 var _ ProductConfig = QuotaProductConfig{}
 
 type QuotaProductConfig struct {
-	productName     v1alpha1.ProductName
-	resourceConfigs map[string]ResourceConfig
-	quota           *Quota
+	productName        v1alpha1.ProductName
+	resourceConfigs    map[string]ResourceConfig
+	quota              *Quota
 }
 
 type ResourceConfig struct {
@@ -114,6 +121,10 @@ func GetQuota(quotaParam string, QuotaConfig *corev1.ConfigMap, retQuota *Quota,
 	} else {
 		retQuota.autoscalingEnabled = false
 	}
+<<<<<<< HEAD
+=======
+	
+>>>>>>> 53c31d75f (MGDAPI-3873 wip)
 
 	// loop through array of ddcss (deployment deploymentConfig StatefulSets)
 	for product, ddcssNames := range products {
@@ -138,6 +149,10 @@ func (s *Quota) GetProduct(productName v1alpha1.ProductName) QuotaProductConfig 
 	return s.productConfigs[productName]
 }
 
+func (s *Quota) GetQuotaAutoscalingState() bool {
+	return s.autoscalingEnabled
+}
+
 func (s *Quota) GetName() string {
 	return s.name
 }
@@ -148,6 +163,10 @@ func (s *Quota) IsUpdated() bool {
 
 func (s *Quota) SetIsUpdated(isUpdated bool) {
 	s.isUpdated = isUpdated
+}
+
+func (s *Quota) SetAutoscaling(autoscalingEnabled bool) {
+	s.autoscalingEnabled = autoscalingEnabled
 }
 
 func (p QuotaProductConfig) GetResourceConfig(ddcssName string) (corev1.ResourceRequirements, bool) {
@@ -261,7 +280,11 @@ func (p QuotaProductConfig) mutatePodTemplate(template *corev1.PodTemplateSpec, 
 
 func (p QuotaProductConfig) mutateReplicas(replicas *int32, name string) {
 	configReplicas := p.resourceConfigs[name].Replicas
+<<<<<<< HEAD
 	if (p.quota.isUpdated || *replicas < configReplicas || *replicas == 0) && p.quota.autoscalingEnabled != true {
+=======
+	if (p.quota.isUpdated || *replicas < configReplicas || *replicas == 0)  && p.quota.autoscalingEnabled != true {
+>>>>>>> 53c31d75f (MGDAPI-3873 wip)
 		*replicas = configReplicas
 	}
 }
